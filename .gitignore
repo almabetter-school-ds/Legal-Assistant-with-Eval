@@ -26,3 +26,6 @@ data/metadata/*
 .Rhistory
 .env
 .gitignore.save
+
+# Local Chroma database backups — do not upload
+data/chroma_db_backup*/

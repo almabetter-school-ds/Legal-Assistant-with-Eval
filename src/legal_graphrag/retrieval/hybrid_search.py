@@ -2454,6 +2454,60 @@ def hybrid_search(
     # 12. RETURN FINAL RESULTS
     # ========================================================================
 
+    # For contract-name and agreement-date questions, prioritize the
+    # opening chunk, which commonly contains the title and execution date.
+    # Other queries are unchanged.
+    normalized_query = re.sub(r"\s+", " ", query.lower())
+    is_opening_chunk_query = bool(
+        re.search(
+            r"\b(document name|name of (?:the )?contract|contract name|title of (?:the )?contract|agreement date|date of (?:the )?contract|contract date)\b",
+            normalized_query,
+        )
+    )
+
+    if is_opening_chunk_query:
+        title_data = get_chroma_collection(collection_name).get(
+            where={"chunk_index": 0},
+            include=["documents", "metadatas"],
+        )
+
+        for title_id, title_text, title_metadata in zip(
+            title_data.get("ids", []),
+            title_data.get("documents", []),
+            title_data.get("metadatas", []),
+        ):
+            title_metadata = title_metadata or {}
+
+            # Respect any metadata filter already applied by this search.
+            if where and not _matches_where(title_metadata, where):
+                continue
+
+            title_hit = next(
+                (hit for hit in candidates if hit.get("id") == title_id),
+                None,
+            )
+
+            if title_hit is None:
+                title_hit = {
+                    "id": title_id,
+                    "text": title_text or "",
+                    "metadata": title_metadata,
+                    "bm25_score": 0.0,
+                }
+
+            # Remove any duplicate, place the title first, and retain the
+            # configured number of results.
+            candidates = [
+                hit for hit in candidates if hit.get("id") != title_id
+            ]
+            candidates = [title_hit, *candidates][:final_k]
+
+            print(
+                f"[hybrid] opening-chunk query: prioritized opening chunk "
+                f"{title_id}"
+            )
+            break
+
     return candidates
 
 

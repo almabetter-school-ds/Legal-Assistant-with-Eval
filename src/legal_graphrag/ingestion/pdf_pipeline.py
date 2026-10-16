@@ -907,28 +907,53 @@ def embed_and_store(
 # ============================================================================
 
 def store_chunks(collection_name: str, chunks: list[PipelineChunk]) -> int:
-    """Embeds and stores chunks in Chroma. Tables are embedded exactly like text chunks but stay one logical unit."""
+    """Embed and store chunks in small batches to reduce peak memory usage."""
     if not chunks:
         return 0
 
     collection = get_chroma_collection(collection_name)
     embedder = get_embedder()
-    texts = [c.text for c in chunks]
-    embeddings = embedder.encode(texts, normalize_embeddings=True, show_progress_bar=True).tolist()
 
-    ids: list[str] = []
-    metadatas: list[dict] = []
-    for chunk in chunks:
-        chunk_id = create_chunk_id(
-            document_name=chunk.metadata.get("document_name", ""),
-            chunk_index=chunk.chunk_index, text=chunk.text, metadata=chunk.metadata,
+    batch_size = 8
+    stored_count = 0
+
+    for start in range(0, len(chunks), batch_size):
+        batch = chunks[start:start + batch_size]
+        texts = [chunk.text for chunk in batch]
+
+        embeddings = embedder.encode(
+            texts,
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        ).tolist()
+
+        ids: list[str] = []
+        metadatas: list[dict] = []
+
+        for chunk in batch:
+            chunk_id = create_chunk_id(
+                document_name=chunk.metadata.get("document_name", ""),
+                chunk_index=chunk.chunk_index,
+                text=chunk.text,
+                metadata=chunk.metadata,
+            )
+            ids.append(chunk_id)
+
+            metadatas.append({
+                key: value
+                for key, value in chunk.metadata.items()
+                if value is not None
+            })
+
+        collection.upsert(
+            ids=ids,
+            documents=texts,
+            embeddings=embeddings,
+            metadatas=metadatas,
         )
-        ids.append(chunk_id)
-        # Chroma metadata can't hold None/nested structures — keep the payload flat and drop Nones.
-        metadatas.append({k: v for k, v in chunk.metadata.items() if v is not None})
+        stored_count += len(batch)
 
-    collection.upsert(ids=ids, documents=texts, embeddings=embeddings, metadatas=metadatas)
-    return len(chunks)
+    return stored_count
 
 # ============================================================================
 # CHROMA QUERY / RETRIEVAL

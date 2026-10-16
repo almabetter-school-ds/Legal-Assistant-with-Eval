@@ -57,6 +57,7 @@ services:
       # Persisted Chroma + model cache locations (match the Dockerfile).
       CHROMA_PERSIST_DIR: "/app/data/chroma_db"
       HF_HOME: "/app/.cache/huggingface"
+      FASTEMBED_CACHE_PATH: "/app/.cache/huggingface/fastembed_cache"
     ports:
       - "8000:8000"
     volumes:

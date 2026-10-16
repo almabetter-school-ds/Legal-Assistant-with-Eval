@@ -298,6 +298,13 @@ Respond with ONLY a JSON object (no prose, no markdown fences):
                                   // that meaningfully limit confidence in this answer
 }
 
+For questions asking to identify or highlight a contract clause or
+term, when verified evidence contains the relevant wording, put the shortest
+complete verbatim excerpt in "answer". Preserve all conditions, exceptions,
+party names, dates, numbers, and time periods exactly as written. Do not
+paraphrase or omit qualifying language. Include multiple excerpts only when
+necessary, and do not add conclusions unsupported by the evidence.
+
 Explicitly reflect any gaps or contradictions the evidence auditor flagged — \
 do not paper over them. Do not include markdown formatting inside "answer" \
 or "evidence"; plain prose only."""

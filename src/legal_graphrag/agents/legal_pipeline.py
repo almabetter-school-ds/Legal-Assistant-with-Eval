@@ -217,6 +217,7 @@ def hybrid_search_agent_node(state: LegalAgentState) -> dict:
         query=state["question"],
         metadata_filter=state.get("metadata_filter"),
         alpha=state.get("alpha", DEFAULT_ALPHA),
+        rerank_results=False,
     )
     store = get_store()
     store.write_audit_record(

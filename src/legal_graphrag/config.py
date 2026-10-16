@@ -27,7 +27,7 @@ CHROMA_PERSIST_DIR = str(
 )
 
 EMBEDDING_MODEL_NAME = (
-    "sentence-transformers/all-mpnet-base-v2"
+    "sentence-transformers/all-MiniLM-L6-v2"
 )
 
 DEFAULT_COLLECTION_NAME = (

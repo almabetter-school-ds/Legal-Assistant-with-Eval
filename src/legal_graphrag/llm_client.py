@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import os
+import time
 
 from groq import Groq
 
@@ -23,7 +24,7 @@ from .tracing import traceable
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 # "
 
-MODEL_NAME = "llama-3.1-8b-instant"
+MODEL_NAME = "openai/gpt-oss-20b"
 
 
 if not GROQ_API_KEY:
@@ -53,6 +54,7 @@ def call_json(
     max_tokens: int = 2000,
 ) -> dict | list:
 
+    started_at = time.perf_counter()
     response = _client.chat.completions.create(
         model=MODEL_NAME,
         messages=[
@@ -68,6 +70,19 @@ def call_json(
         max_tokens=max_tokens,
         temperature=0.0,
         response_format={"type": "json_object"},
+    )
+    request_seconds = time.perf_counter() - started_at
+    usage = getattr(response, "usage", None)
+    completion_details = getattr(usage, "completion_tokens_details", None)
+
+    print(
+        f"[llm.call_json] model={MODEL_NAME} "
+        f"request_seconds={request_seconds:.2f} "
+        f"prompt_tokens={getattr(usage, 'prompt_tokens', None)} "
+        f"completion_tokens={getattr(usage, 'completion_tokens', None)} "
+        f"total_tokens={getattr(usage, 'total_tokens', None)} "
+        f"reasoning_tokens={getattr(completion_details, 'reasoning_tokens', None)}",
+        flush=True,
     )
 
     raw = response.choices[0].message.content or ""
@@ -203,7 +218,7 @@ def call_text(
 # # Configuration
 # # ---------------------------------------------------------------------------
 
-# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6Jg")
+# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY",)
 # MODEL_NAME = "gemini-3.6-flash"
 
 # if not GEMINI_API_KEY:
