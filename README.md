@@ -12,7 +12,7 @@ The project supports two main workflows: asking questions about contracts from t
 
 - **Live application:** [Open Legal GraphRAG](https://legalassistantwitheval-vj49.onrender.com)
 - **API documentation (Swagger):** [Explore API endpoints](https://legalassistantwitheval-vj49.onrender.com/docs)
-- 
+
 The service is hosted on Render. The first request after a period of inactivity may take longer while the service starts. The application also relies on a Neo4j database, which must be running for graph-backed operations to work.
 
 ## 👩‍💻 Contributor
